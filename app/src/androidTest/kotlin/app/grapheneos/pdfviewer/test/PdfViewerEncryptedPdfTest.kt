@@ -30,12 +30,21 @@ class PdfViewerEncryptedPdfTest {
     fun encryptedPdf_wrongThenCorrectPassword() {
         PdfViewerLauncher.launchWithTestAsset("test-encrypted.pdf").use { scenario ->
             robot.waitForPasswordDialog()
+            PdfViewerTestUtils.dumpDialogDiagnostics(scenario, "after initial dialog shown")
 
             robot.typePassword("somepass")
             robot.assertPasswordPositiveButtonEnabled(enabled = true)
             robot.clickPasswordPositiveButton()
+            PdfViewerTestUtils.dumpDialogDiagnostics(scenario, "after clickPositiveButton")
 
-            robot.waitForPasswordError("invalid password")
+            try {
+                robot.waitForPasswordError("invalid password")
+            } catch (e: Throwable) {
+                PdfViewerTestUtils.dumpDialogDiagnostics(scenario, "waitForPasswordError FAILED")
+                throw e
+            }
+
+            PdfViewerTestUtils.dumpDialogDiagnostics(scenario, "after waitForPasswordError passed")
             robot.assertPasswordPositiveButtonEnabled(enabled = false)
 
             robot.typePassword("testpass")
@@ -50,9 +59,7 @@ class PdfViewerEncryptedPdfTest {
             PdfViewerTestUtils.assertTextLayerContent(scenario, "Password-Protected Content")
 
             scenario.onActivity {
-                assertEquals(
-                    "Encrypted PDF should have 1 page", 1, it.totalPages
-                )
+                assertEquals("Encrypted PDF should have 1 page", 1, it.totalPages)
                 assertNotNull(
                     "Document properties should be populated after unlock",
                     it.documentProperties

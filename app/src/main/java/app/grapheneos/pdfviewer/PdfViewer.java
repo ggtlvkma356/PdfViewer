@@ -151,7 +151,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
     private volatile float mInsetBottom = 0f;
     private int mDocumentOrientationDegrees;
     private int mDocumentState;
-    private String mEncryptedDocumentPassword;
+    public String mEncryptedDocumentPassword;
     @VisibleForTesting
     List<CharSequence> mDocumentProperties;
     @VisibleForTesting
@@ -293,6 +293,8 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
 
         @JavascriptInterface
         public void showPasswordPrompt() {
+            Log.d(TAG, "showPasswordPrompt called on thread=" + Thread.currentThread().getName()
+                    + ", isAdded=" + getPasswordPromptFragment().isAdded());
             if (!getPasswordPromptFragment().isAdded()){
                 getPasswordPromptFragment().show(getSupportFragmentManager(), PasswordPromptFragment.class.getName());
             }
@@ -301,11 +303,13 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
 
         @JavascriptInterface
         public void invalidPassword() {
+            Log.d(TAG, "invalidPassword called on thread=" + Thread.currentThread().getName());
             runOnUiThread(() -> viewModel.invalid());
         }
 
         @JavascriptInterface
         public void onLoaded() {
+            Log.d(TAG, "onLoaded called on thread=" + Thread.currentThread().getName());
             viewModel.validated();
             if (getPasswordPromptFragment().isAdded()) {
                 getPasswordPromptFragment().dismiss();
@@ -314,6 +318,7 @@ public class PdfViewer extends AppCompatActivity implements LoaderManager.Loader
 
         @JavascriptInterface
         public void onLoadError() {
+            Log.d(TAG, "onLoadError called on thread=" + Thread.currentThread().getName());
             runOnUiThread(() -> {
                 maybeCloseInputStream();
                 resetDocumentState();

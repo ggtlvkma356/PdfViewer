@@ -4,10 +4,13 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.util.Log
 import android.webkit.WebView
+import androidx.fragment.app.DialogFragment
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -402,6 +405,37 @@ object PdfViewerTestUtils {
             var actual = false
             scenario.onActivity { actual = it.supportActionBar?.isShowing == true }
             actual == expectedVisible
+        }
+    }
+
+    fun dumpDialogDiagnostics(
+        scenario: ActivityScenario<PdfViewer>,
+        label: String
+    ) {
+        Log.d("TEST_DIAG", "=== $label ===")
+        scenario.onActivity { activity ->
+            val fm = activity.supportFragmentManager
+            Log.d("TEST_DIAG", "Fragment count: ${fm.fragments.size}")
+            fm.fragments.forEach { f ->
+                Log.d("TEST_DIAG", "  fragment: ${f.javaClass.simpleName}, " +
+                        "isAdded=${f.isAdded}, isVisible=${f.isVisible}, " +
+                        "isResumed=${f.isResumed}, isDetached=${f.isDetached}")
+                if (f is DialogFragment) {
+                    Log.d("TEST_DIAG", "    dialog=${f.dialog}, " +
+                            "isShowing=${f.dialog?.isShowing}, " +
+                            "window=${f.dialog?.window}")
+                }
+            }
+            Log.d("TEST_DIAG", "passwordStatus=${activity.viewModel.passwordStatus.value}")
+            Log.d("TEST_DIAG", "mDocumentState reflective check skipped, " +
+                    "mEncryptedDocumentPassword=${activity.mEncryptedDocumentPassword}")
+        }
+
+        try {
+            onView(isRoot()).inRoot(isDialog()).check(matches(isDisplayed()))
+            Log.d("TEST_DIAG", "Dialog root: FOUND")
+        } catch (e: Exception) {
+            Log.d("TEST_DIAG", "Dialog root: NOT FOUND (${e.javaClass.simpleName})")
         }
     }
 }

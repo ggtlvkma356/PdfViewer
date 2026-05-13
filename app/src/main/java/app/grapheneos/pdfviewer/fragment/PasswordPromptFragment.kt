@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
+import android.util.Log
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo.IME_ACTION_DONE
 import androidx.appcompat.app.AlertDialog
@@ -24,6 +25,7 @@ class PasswordPromptFragment : DialogFragment() {
     private lateinit var passwordEditText : TextInputEditText
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        Log.d("PasswordPrompt", "onCreateDialog, savedInstanceState=${savedInstanceState != null}")
         val passwordPrompt = MaterialAlertDialogBuilder(requireContext())
         val passwordDialogFragmentBinding =
             PasswordDialogFragmentBinding.inflate(getLayoutInflater())
@@ -88,14 +90,26 @@ class PasswordPromptFragment : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
+        Log.d("PasswordPrompt", "onStart, dialog.isShowing=${dialog?.isShowing}, isAdded=$isAdded")
         updatePositiveButton()
         passwordEditText.requestFocus()
     }
 
     override fun onResume() {
         super.onResume()
+        Log.d("PasswordPrompt", "onResume, dialog.isShowing=${dialog?.isShowing}, isAdded=$isAdded")
         (dialog as AlertDialog).getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
             sendPassword()
         }
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        Log.w("PasswordPrompt", "onDismiss called", Throwable("dismiss stack trace"))
+        super.onDismiss(dialog)
+    }
+
+    override fun onDestroy() {
+        Log.d("PasswordPrompt", "onDestroy, isAdded=$isAdded")
+        super.onDestroy()
     }
 }
